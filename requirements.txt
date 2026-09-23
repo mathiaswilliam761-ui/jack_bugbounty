@@ -1,0 +1,25 @@
+# Pentest Scanner Requirements
+
+# Core dependencies
+aiohttp>=3.9.0
+asyncio>=3.4.3
+
+# Utilities
+urllib3>=2.0.0
+requests>=2.31.0
+
+# For browser automation (optional)
+# playwright>=1.40.0
+# selenium>=4.15.0
+
+# For SSL/TLS analysis
+cryptography>=41.0.0
+
+# For XML parsing
+lxml>=4.9.0
+
+# For YAML config (optional)
+pyyaml>=6.0.0
+
+# For rich console output (optional)
+rich>=13.0.0
