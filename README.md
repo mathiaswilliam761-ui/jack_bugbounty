@@ -56,7 +56,7 @@ python -m pentest_scanner -u https://example.com \
 python -m pentest_scanner -u https://example.com \
   --auth-cookie "session=abc123" \
   --auth-header "X-CSRF-Token=xyz789" \
-  --bearer-token "eyJhbGciOiJIUzI1NiIs..."
+  --bearer-token "eyJhbG...NiIs..."
 ```
 
 ### With Proxy (Burp Suite)
