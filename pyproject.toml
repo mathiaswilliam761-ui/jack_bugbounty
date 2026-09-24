@@ -48,6 +48,9 @@ pentest-scanner = "pentest_scanner.cli:main"
 where = ["."]
 include = ["pentest_scanner*"]
 
+[tool.setuptools.package-dir]
+"" = "."
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
