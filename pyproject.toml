@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "pentest-scanner"
 version = "1.0.0"
 description = "Automated vulnerability scanner for bug bounty programs"
-readme = "README.md"
+readme = "pentest_scanner/README.md"
 license = {text = "MIT"}
 authors = [
     {name = "mathiaswilliam761", email = "mathiaswilliam761@example.com"}
@@ -31,6 +31,7 @@ dependencies = [
     "requests>=2.31.0",
     "rich>=13.0.0",
     "urllib3>=2.0.0",
+    "pyyaml>=6.0.0",
 ]
 keywords = ["security", "pentesting", "bug-bounty", "vulnerability-scanner", "owasp"]
 
